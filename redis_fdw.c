@@ -8,7 +8,7 @@
  * This software is released under the PostgreSQL Licence
  *
  * Authors: Dave Page <dpage@pgadmin.org>
- *          Andrew Dunstan <andrew@dunslane.net>
+ *			Andrew Dunstan <andrew@dunslane.net>
  *
  * IDENTIFICATION
  *		  redis_fdw/redis_fdw.c
@@ -101,25 +101,25 @@ typedef enum
 
 typedef struct redisTableOptions
 {
-	char *address;
-	int   port;
-	char *password;
-	int   database;
-	char *keyprefix;
-	char *keyset;
-	char *singleton_key;
+	char	   *address;
+	int			port;
+	char	   *password;
+	int			database;
+	char	   *keyprefix;
+	char	   *keyset;
+	char	   *singleton_key;
 	redis_table_type table_type;
 } redisTableOptions;
 
 
-	
+
 typedef struct
 {
 	char	   *svr_address;
 	int			svr_port;
 	char	   *svr_password;
 	int			svr_database;
-}	RedisFdwPlanState;
+} RedisFdwPlanState;
 
 /*
  * FDW-specific information for ForeignScanState.fdw_state.
@@ -135,14 +135,14 @@ typedef struct RedisFdwExecutionState
 	int			port;
 	char	   *password;
 	int			database;
-	char       *keyprefix;
-	char       *keyset;
-	char       *qual_value;
-	char       *singleton_key;
+	char	   *keyprefix;
+	char	   *keyset;
+	char	   *qual_value;
+	char	   *singleton_key;
 	redis_table_type table_type;
-	char       *cursor_search_string;
-	char       *cursor_id;
-}	RedisFdwExecutionState;
+	char	   *cursor_search_string;
+	char	   *cursor_id;
+} RedisFdwExecutionState;
 
 /* initial cursor */
 #define ZERO "0"
@@ -187,7 +187,8 @@ static void redisEndForeignScan(ForeignScanState *node);
 static bool redisIsValidOption(const char *option, Oid context);
 static void redisGetOptions(Oid foreigntableid, redisTableOptions *options);
 static void redisGetQual(Node *node, TupleDesc tupdesc, char **key, char **value, bool *pushdown);
-static char *process_redis_array(redisReply *reply,	redis_table_type type);
+static char *process_redis_array(redisReply *reply, redis_table_type type);
+
 /*
  * Foreign-data wrapper handler function: return a struct with pointers
  * to my callback routines.
@@ -231,9 +232,9 @@ redis_fdw_validator(PG_FUNCTION_ARGS)
 	char	   *svr_password = NULL;
 	int			svr_database = 0;
 	redis_table_type tabletype = PG_REDIS_SCALAR_TABLE;
-	char       *tablekeyprefix = NULL;
-	char       *tablekeyset = NULL;
-	char       *singletonkey = NULL;
+	char	   *tablekeyprefix = NULL;
+	char	   *tablekeyset = NULL;
+	char	   *singletonkey = NULL;
 	ListCell   *cell;
 
 #ifdef DEBUG
@@ -268,7 +269,7 @@ redis_fdw_validator(PG_FUNCTION_ARGS)
 			ereport(ERROR,
 					(errcode(ERRCODE_FDW_INVALID_OPTION_NAME),
 					 errmsg("invalid option \"%s\"", def->defname),
-					 errhint("Valid options in this context are: %s", 
+					 errhint("Valid options in this context are: %s",
 							 buf.len ? buf.data : "<none>")
 					 ));
 		}
@@ -288,7 +289,7 @@ redis_fdw_validator(PG_FUNCTION_ARGS)
 			if (svr_port)
 				ereport(ERROR,
 						(errcode(ERRCODE_SYNTAX_ERROR),
-						 errmsg("conflicting or redundant options: port (%s)", 
+						 errmsg("conflicting or redundant options: port (%s)",
 								defGetString(def))
 						 ));
 
@@ -320,17 +321,17 @@ redis_fdw_validator(PG_FUNCTION_ARGS)
 				ereport(ERROR,
 						(errcode(ERRCODE_SYNTAX_ERROR),
 						 errmsg("conflicting options: tablekeyset(%s) and "
-								"singleton_key (%s)", tablekeyset, 
+								"singleton_key (%s)", tablekeyset,
 								defGetString(def))
 						 ));
 			if (tablekeyprefix)
 				ereport(ERROR,
 						(errcode(ERRCODE_SYNTAX_ERROR),
 						 errmsg("conflicting options: tablekeyprefix(%s) and "
-								"singleton_key (%s)", tablekeyprefix, 
+								"singleton_key (%s)", tablekeyprefix,
 								defGetString(def))
 						 ));
-			if (singletonkey )
+			if (singletonkey)
 				ereport(ERROR,
 						(errcode(ERRCODE_SYNTAX_ERROR),
 						 errmsg("conflicting or redundant options: "
@@ -345,14 +346,14 @@ redis_fdw_validator(PG_FUNCTION_ARGS)
 				ereport(ERROR,
 						(errcode(ERRCODE_SYNTAX_ERROR),
 						 errmsg("conflicting options: tablekeyset(%s) and "
-								"tablekeyprefix (%s)", tablekeyset, 
+								"tablekeyprefix (%s)", tablekeyset,
 								defGetString(def))
 						 ));
 			if (singletonkey)
 				ereport(ERROR,
 						(errcode(ERRCODE_SYNTAX_ERROR),
 						 errmsg("conflicting options: singleton_key(%s) and "
-								"tablekeyprefix (%s)", singletonkey, 
+								"tablekeyprefix (%s)", singletonkey,
 								defGetString(def))
 						 ));
 			if (tablekeyprefix)
@@ -369,15 +370,15 @@ redis_fdw_validator(PG_FUNCTION_ARGS)
 			if (tablekeyprefix)
 				ereport(ERROR,
 						(errcode(ERRCODE_SYNTAX_ERROR),
-						 errmsg("conflicting options: tablekeyprefix (%s) and "
-								"tablekeyset (%s)", tablekeyprefix, 
-								defGetString(def))
+					   errmsg("conflicting options: tablekeyprefix (%s) and "
+							  "tablekeyset (%s)", tablekeyprefix,
+							  defGetString(def))
 						 ));
 			if (singletonkey)
 				ereport(ERROR,
 						(errcode(ERRCODE_SYNTAX_ERROR),
 						 errmsg("conflicting options: singleton_key(%s) and "
-								"tablekeyset (%s)", singletonkey, 
+								"tablekeyset (%s)", singletonkey,
 								defGetString(def))
 						 ));
 			if (tablekeyset)
@@ -391,19 +392,20 @@ redis_fdw_validator(PG_FUNCTION_ARGS)
 		}
 		else if (strcmp(def->defname, "tabletype") == 0)
 		{
-			char *typeval = defGetString(def);
+			char	   *typeval = defGetString(def);
+
 			if (tabletype)
 				ereport(ERROR,
 						(errcode(ERRCODE_SYNTAX_ERROR),
 						 errmsg("conflicting or redundant options: tabletype "
 								"(%s)", typeval)));
-			if (strcmp(typeval,"hash") == 0)
+			if (strcmp(typeval, "hash") == 0)
 				tabletype = PG_REDIS_HASH_TABLE;
-			else if (strcmp(typeval,"list") == 0)
+			else if (strcmp(typeval, "list") == 0)
 				tabletype = PG_REDIS_LIST_TABLE;
-			else if (strcmp(typeval,"set") == 0)
+			else if (strcmp(typeval, "set") == 0)
 				tabletype = PG_REDIS_SET_TABLE;
-			else if (strcmp(typeval,"zset") == 0)
+			else if (strcmp(typeval, "zset") == 0)
 				tabletype = PG_REDIS_ZSET_TABLE;
 			else
 				ereport(ERROR,
@@ -496,15 +498,15 @@ redisGetOptions(Oid foreigntableid, redisTableOptions *table_options)
 
 		if (strcmp(def->defname, "tabletype") == 0)
 		{
-			char *typeval = defGetString(def);
+			char	   *typeval = defGetString(def);
 
-			if (strcmp(typeval,"hash") == 0)
+			if (strcmp(typeval, "hash") == 0)
 				table_options->table_type = PG_REDIS_HASH_TABLE;
-			else if (strcmp(typeval,"list") == 0)
+			else if (strcmp(typeval, "list") == 0)
 				table_options->table_type = PG_REDIS_LIST_TABLE;
-			else if (strcmp(typeval,"set") == 0)
+			else if (strcmp(typeval, "set") == 0)
 				table_options->table_type = PG_REDIS_SET_TABLE;
-			else if (strcmp(typeval,"zset") == 0)
+			else if (strcmp(typeval, "zset") == 0)
 				table_options->table_type = PG_REDIS_ZSET_TABLE;
 		}
 	}
@@ -579,7 +581,7 @@ redisGetForeignRelSize(PlannerInfo *root,
 			redisFree(context);
 			ereport(ERROR,
 					(errcode(ERRCODE_FDW_UNABLE_TO_ESTABLISH_CONNECTION),
-					 errmsg("failed to authenticate to redis: %d", 
+					 errmsg("failed to authenticate to redis: %d",
 							context->err)));
 		}
 
@@ -594,13 +596,14 @@ redisGetForeignRelSize(PlannerInfo *root,
 		redisFree(context);
 		ereport(ERROR,
 				(errcode(ERRCODE_FDW_UNABLE_TO_CREATE_EXECUTION),
-				 errmsg("failed to select database %d: %d", 
-						table_options.database,  context->err)
+				 errmsg("failed to select database %d: %d",
+						table_options.database, context->err)
 				 ));
 	}
 
 	/* Execute a query to get the table size */
 #if 0
+
 	/*
 	 * KEYS is potentiallyexpensive, so this test is disabled and we use a
 	 * fairly dubious heuristic instead.
@@ -608,11 +611,13 @@ redisGetForeignRelSize(PlannerInfo *root,
 	if (table_options.keyprefix)
 	{
 		/* it's a pity there isn't an NKEYS command in Redis */
-		int len = strlen(table_options.keyprefix) + 2;
-		char *buff = palloc(len * sizeof(char));
-		snprintf(buff,len, "%s*",table_options.keyprefix);
-		reply = redisCommand(context,"KEYS %s",buff);
-	} else
+		int			len = strlen(table_options.keyprefix) + 2;
+		char	   *buff = palloc(len * sizeof(char));
+
+		snprintf(buff, len, "%s*", table_options.keyprefix);
+		reply = redisCommand(context, "KEYS %s", buff);
+	}
+	else
 #endif
 	if (table_options.singleton_key)
 	{
@@ -622,24 +627,24 @@ redisGetForeignRelSize(PlannerInfo *root,
 				baserel->rows = 1;
 				return;
 			case PG_REDIS_HASH_TABLE:
-				reply = redisCommand(context, "HLEN %s",table_options.singleton_key);
+				reply = redisCommand(context, "HLEN %s", table_options.singleton_key);
 				break;
 			case PG_REDIS_LIST_TABLE:
-				reply = redisCommand(context, "LLEN %s",table_options.singleton_key);
+				reply = redisCommand(context, "LLEN %s", table_options.singleton_key);
 				break;
 			case PG_REDIS_SET_TABLE:
-				reply = redisCommand(context, "SCARD %s",table_options.singleton_key);
+				reply = redisCommand(context, "SCARD %s", table_options.singleton_key);
 				break;
 			case PG_REDIS_ZSET_TABLE:
-				reply = redisCommand(context, "ZCARD %s",table_options.singleton_key);
+				reply = redisCommand(context, "ZCARD %s", table_options.singleton_key);
 				break;
 			default:
 				;
 		}
 	}
 	else if (table_options.keyset)
-	{ 
-		reply = redisCommand(context,"SCARD %s",table_options.keyset);
+	{
+		reply = redisCommand(context, "SCARD %s", table_options.keyset);
 	}
 	else
 	{
@@ -660,10 +665,10 @@ redisGetForeignRelSize(PlannerInfo *root,
 		baserel->rows = reply->elements;
 	else
 #endif
-		if (table_options.keyprefix)
-			baserel->rows = reply->integer / 20;
-		else
-			baserel->rows = reply->integer;
+	if (table_options.keyprefix)
+		baserel->rows = reply->integer / 20;
+	else
+		baserel->rows = reply->integer;
 
 	freeReplyObject(reply);
 	redisFree(context);
@@ -763,14 +768,14 @@ redisExplainForeignScan(ForeignScanState *node, ExplainState *es)
 	if (!es->costs)
 		return;
 
-	/* 
-	 * Execute a query to get the table size 
+	/*
+	 * Execute a query to get the table size
 	 *
 	 * See above for more details.
 	 */
-   
+
 	if (festate->keyset)
-	{ 
+	{
 		reply = redisCommand(festate->context, "SCARD %s", festate->keyset);
 	}
 	else
@@ -783,7 +788,7 @@ redisExplainForeignScan(ForeignScanState *node, ExplainState *es)
 		redisFree(festate->context);
 		ereport(ERROR,
 				(errcode(ERRCODE_FDW_UNABLE_TO_ESTABLISH_CONNECTION),
-		 errmsg("failed to get the table size: %d", festate->context->err)
+			errmsg("failed to get the table size: %d", festate->context->err)
 				 ));
 	}
 
@@ -797,9 +802,9 @@ redisExplainForeignScan(ForeignScanState *node, ExplainState *es)
 				 ));
 	}
 
-	ExplainPropertyLong("Foreign Redis Table Size", 
-						festate->keyprefix ? reply->integer / 20 : 
-						reply->integer, 
+	ExplainPropertyLong("Foreign Redis Table Size",
+						festate->keyprefix ? reply->integer / 20 :
+						reply->integer,
 						es);
 
 	freeReplyObject(reply);
@@ -830,17 +835,17 @@ redisBeginForeignScan(ForeignScanState *node, int eflags)
 	table_options.password = NULL;
 	table_options.database = 0;
 	table_options.keyprefix = NULL;
-    table_options.keyset = NULL;
+	table_options.keyset = NULL;
 	table_options.singleton_key = NULL;
-    table_options.table_type = PG_REDIS_SCALAR_TABLE;
+	table_options.table_type = PG_REDIS_SCALAR_TABLE;
 
 
-   /* Fetch options  */
-   redisGetOptions(RelationGetRelid(node->ss.ss_currentRelation), 
-				   &table_options);
+	/* Fetch options  */
+	redisGetOptions(RelationGetRelid(node->ss.ss_currentRelation),
+					&table_options);
 
 	/* Connect to the server */
-	context = redisConnectWithTimeout(table_options.address, 
+	context = redisConnectWithTimeout(table_options.address,
 									  table_options.port, timeout);
 
 	if (context->err)
@@ -877,7 +882,7 @@ redisBeginForeignScan(ForeignScanState *node, int eflags)
 		redisFree(context);
 		ereport(ERROR,
 				(errcode(ERRCODE_FDW_UNABLE_TO_ESTABLISH_CONNECTION),
-				 errmsg("failed to select database %d: %s", 
+				 errmsg("failed to select database %d: %s",
 						table_options.database, context->errstr)
 				 ));
 	}
@@ -888,7 +893,7 @@ redisBeginForeignScan(ForeignScanState *node, int eflags)
 
 		ereport(ERROR,
 				(errcode(ERRCODE_FDW_UNABLE_TO_ESTABLISH_CONNECTION),
-				 errmsg("failed to select database %d: %s", 
+				 errmsg("failed to select database %d: %s",
 						table_options.database, err)
 				 ));
 	}
@@ -905,8 +910,8 @@ redisBeginForeignScan(ForeignScanState *node, int eflags)
 			/* Only the first qual can be pushed down to Redis */
 			ExprState  *state = lfirst(lc);
 
-			redisGetQual((Node *) state->expr, 
-						 node->ss.ss_currentRelation->rd_att, 
+			redisGetQual((Node *) state->expr,
+						 node->ss.ss_currentRelation->rd_att,
 						 &qual_key, &qual_value, &pushdown);
 			if (pushdown)
 				break;
@@ -927,7 +932,7 @@ redisBeginForeignScan(ForeignScanState *node, int eflags)
 	festate->table_type = table_options.table_type;
 	festate->cursor_id = NULL;
 	festate->cursor_search_string = NULL;
-	
+
 	festate->qual_value = pushdown ? qual_value : NULL;
 
 	/* OK, we connected. If this is an EXPLAIN, bail out now */
@@ -937,36 +942,34 @@ redisBeginForeignScan(ForeignScanState *node, int eflags)
 	/* Execute the query */
 	if (festate->singleton_key)
 	{
-
-	  /*
-	   * We're not using cursors for now for singleton key tables.
-	   * The theory is that we don't expect them to be so large
-	   * in normal use that we would get any significant benefit from
-	   * doing so, and in any case scanning them in a single step is not
-	   * going to tie things up like scannoing the whole Redis database
-	   * could.
-	   */
+		/*
+		 * We're not using cursors for now for singleton key tables. The
+		 * theory is that we don't expect them to be so large in normal use
+		 * that we would get any significant benefit from doing so, and in any
+		 * case scanning them in a single step is not going to tie things up
+		 * like scannoing the whole Redis database could.
+		 */
 
 		switch (table_options.table_type)
 		{
 			case PG_REDIS_SCALAR_TABLE:
-				reply = redisCommand(context,"GET %s",festate->singleton_key);
+				reply = redisCommand(context, "GET %s", festate->singleton_key);
 				break;
 			case PG_REDIS_HASH_TABLE:
 				/* the singleton case where a qual pushdown makes most sense */
 				if (qual_value && pushdown)
-					reply = redisCommand(context,"HGET %s %s",festate->singleton_key, qual_value);
+					reply = redisCommand(context, "HGET %s %s", festate->singleton_key, qual_value);
 				else
-					reply = redisCommand(context,"HGETALL %s",festate->singleton_key);
+					reply = redisCommand(context, "HGETALL %s", festate->singleton_key);
 				break;
 			case PG_REDIS_LIST_TABLE:
-				reply = redisCommand(context, "LRANGE %s 0 -1",table_options.singleton_key);
+				reply = redisCommand(context, "LRANGE %s 0 -1", table_options.singleton_key);
 				break;
 			case PG_REDIS_SET_TABLE:
-				reply = redisCommand(context, "SMEMBERS %s",table_options.singleton_key);
+				reply = redisCommand(context, "SMEMBERS %s", table_options.singleton_key);
 				break;
 			case PG_REDIS_ZSET_TABLE:
-				reply = redisCommand(context, "ZRANGE %s 0 -1 WITHSCORES",table_options.singleton_key);
+				reply = redisCommand(context, "ZRANGE %s 0 -1 WITHSCORES", table_options.singleton_key);
 				break;
 			default:
 				;
@@ -974,56 +977,56 @@ redisBeginForeignScan(ForeignScanState *node, int eflags)
 	}
 	else if (qual_value && pushdown)
 	{
-		/* 
-		 * if we have a qual, make sure it's a member of the keyset or has
-		 * the right prefix if either of these options is specified.
+		/*
+		 * if we have a qual, make sure it's a member of the keyset or has the
+		 * right prefix if either of these options is specified.
 		 *
 		 * If not set row to -1 to indicate failure
 		 */
 		if (festate->keyset)
 		{
 			redisReply *sreply;
-			sreply = redisCommand(context, "SISMEMBER %s %s", 
+
+			sreply = redisCommand(context, "SISMEMBER %s %s",
 								  festate->keyset, qual_value);
-			if(!sreply)
+			if (!sreply)
 			{
 				redisFree(festate->context);
 				ereport(ERROR,
 						(errcode(ERRCODE_FDW_UNABLE_TO_CREATE_EXECUTION),
 						 errmsg("failed to list keys: %s", context->errstr)
-							));
+						 ));
 			}
 			if (sreply->type == REDIS_REPLY_ERROR)
 			{
 				char	   *err = pstrdup(sreply->str);
-				
+
 				freeReplyObject(sreply);
 				ereport(ERROR,
 						(errcode(ERRCODE_FDW_UNABLE_TO_ESTABLISH_CONNECTION),
 						 errmsg("failed to list keys: %s", err)
-							));
+						 ));
 
 			}
-			
+
 			if (sreply->integer != 1)
-				festate->row =-1;
+				festate->row = -1;
 
 		}
 		else if (festate->keyprefix)
 		{
-			if (strncmp(qual_value, festate->keyprefix, 
+			if (strncmp(qual_value, festate->keyprefix,
 						strlen(festate->keyprefix)) != 0)
 				festate->row = -1;
 		}
 
 		/*
-		 * For a qual we don't want to scan at all,
-		 * just check that the key exists. We do this
-		 * check in adddition to the keyset/keyprefix checks,
-		 * is any, so we know the item is really there.
+		 * For a qual we don't want to scan at all, just check that the key
+		 * exists. We do this check in adddition to the keyset/keyprefix
+		 * checks, is any, so we know the item is really there.
 		 */
 
-		reply = redisCommand(context,"EXISTS %s",qual_value);
+		reply = redisCommand(context, "EXISTS %s", qual_value);
 		if (reply->integer == 0)
 			festate->row = -1;
 
@@ -1061,16 +1064,16 @@ redisBeginForeignScan(ForeignScanState *node, int eflags)
 	else if (reply->type == REDIS_REPLY_ERROR)
 	{
 		char	   *err = pstrdup(reply->str);
-		
+
 		freeReplyObject(reply);
 		ereport(ERROR,
 				(errcode(ERRCODE_FDW_UNABLE_TO_ESTABLISH_CONNECTION),
 				 errmsg("failed somehow: %s", err)
-					));
+				 ));
 	}
 
 	/* Store the additional state info */
-	festate->attinmeta = 
+	festate->attinmeta =
 		TupleDescGetAttInMetadata(node->ss.ss_currentRelation->rd_att);
 
 	if (festate->singleton_key)
@@ -1093,7 +1096,7 @@ redisBeginForeignScan(ForeignScanState *node, int eflags)
 			ereport(ERROR,
 					(errcode(ERRCODE_FDW_UNABLE_TO_ESTABLISH_CONNECTION),
 					 errmsg("wrong reply type %d", cursor->type)
-						));
+					 ));
 		}
 
 		/* for cursors, this is the list of elements */
@@ -1114,6 +1117,7 @@ static TupleTableSlot *
 redisIterateForeignScan(ForeignScanState *node)
 {
 	RedisFdwExecutionState *festate = (RedisFdwExecutionState *) node->fdw_state;
+
 	if (festate->singleton_key)
 		return redisIterateForeignScanSingleton(node);
 	else
@@ -1144,8 +1148,8 @@ redisIterateForeignScanMulti(ForeignScanState *node)
 	found = false;
 
 	/*
-	 * If we're out of rows on the cursor, fetch the next set.
-	 * Keep going until we get a result back that actually has some rows.
+	 * If we're out of rows on the cursor, fetch the next set. Keep going
+	 * until we get a result back that actually has some rows.
 	 */
 	while (festate->cursor_id != NULL &&
 		   festate->row >= festate->reply->elements)
@@ -1181,7 +1185,7 @@ redisIterateForeignScanMulti(ForeignScanState *node)
 					(errcode(ERRCODE_FDW_UNABLE_TO_CREATE_EXECUTION),
 					 errmsg("failed to list keys: %s",
 							festate->context->errstr)
-						));
+					 ));
 		}
 		else if (creply->type == REDIS_REPLY_ERROR)
 		{
@@ -1191,10 +1195,10 @@ redisIterateForeignScanMulti(ForeignScanState *node)
 			ereport(ERROR,
 					(errcode(ERRCODE_FDW_UNABLE_TO_ESTABLISH_CONNECTION),
 					 errmsg("failed somehow: %s", err)
-						));
+					 ));
 		}
 
-		cursor  = creply->element[0];
+		cursor = creply->element[0];
 
 		if (cursor->type == REDIS_REPLY_STRING)
 		{
@@ -1208,7 +1212,7 @@ redisIterateForeignScanMulti(ForeignScanState *node)
 			ereport(ERROR,
 					(errcode(ERRCODE_FDW_UNABLE_TO_ESTABLISH_CONNECTION),
 					 errmsg("wrong reply type %d", cursor->type)
-						));
+					 ));
 		}
 
 		festate->reply = creply->element[1];
@@ -1216,11 +1220,11 @@ redisIterateForeignScanMulti(ForeignScanState *node)
 	}
 
 	/*
-	 * -1 means we failed the qual test, so there are no rows
-	 * or we've already processed the qual
+	 * -1 means we failed the qual test, so there are no rows or we've already
+	 * processed the qual
 	 */
 
-	if (festate->row >  -1 &&
+	if (festate->row > -1 &&
 		(festate->qual_value != NULL ||
 		 (festate->row < festate->reply->elements)))
 	{
@@ -1234,27 +1238,27 @@ redisIterateForeignScanMulti(ForeignScanState *node)
 			key = festate->qual_value != NULL ?
 				festate->qual_value :
 				festate->reply->element[festate->row]->str;
-			switch(festate->table_type)
+			switch (festate->table_type)
 			{
 				case PG_REDIS_HASH_TABLE:
-					reply = redisCommand(festate->context, 
-										  "HGETALL %s", key);
+					reply = redisCommand(festate->context,
+										 "HGETALL %s", key);
 					break;
 				case PG_REDIS_LIST_TABLE:
-					reply = redisCommand(festate->context, 
-										  "LRANGE %s 0 -1", key);
+					reply = redisCommand(festate->context,
+										 "LRANGE %s 0 -1", key);
 					break;
 				case PG_REDIS_SET_TABLE:
-					reply = redisCommand(festate->context, 
-										  "SMEMBERS %s", key);
+					reply = redisCommand(festate->context,
+										 "SMEMBERS %s", key);
 					break;
 				case PG_REDIS_ZSET_TABLE:
-					reply = redisCommand(festate->context, 
-										  "ZRANGE %s 0 -1", key);
+					reply = redisCommand(festate->context,
+										 "ZRANGE %s 0 -1", key);
 					break;
 				case PG_REDIS_SCALAR_TABLE:
 				default:
-					reply = redisCommand(festate->context, 
+					reply = redisCommand(festate->context,
 										 "GET %s", key);
 			}
 
@@ -1263,8 +1267,8 @@ redisIterateForeignScanMulti(ForeignScanState *node)
 				freeReplyObject(festate->reply);
 				redisFree(festate->context);
 				ereport(ERROR, (errcode(ERRCODE_FDW_UNABLE_TO_CREATE_REPLY),
-								errmsg("failed to get the value for key \"%s\": %s",
-									   key, festate->context->errstr)
+						 errmsg("failed to get the value for key \"%s\": %s",
+								key, festate->context->errstr)
 								));
 			}
 
@@ -1352,7 +1356,7 @@ redisIterateForeignScanSingleton(ForeignScanState *node)
 
 	if (festate->table_type == PG_REDIS_SCALAR_TABLE)
 	{
-		festate->row = -1; /* just one row for a scalar */
+		festate->row = -1;		/* just one row for a scalar */
 		switch (festate->reply->type)
 		{
 			case REDIS_REPLY_INTEGER:
@@ -1360,44 +1364,44 @@ redisIterateForeignScanSingleton(ForeignScanState *node)
 				snprintf(key, 64, "%lld", festate->reply->integer);
 				found = true;
 				break;
-				
+
 			case REDIS_REPLY_STRING:
 				key = festate->reply->str;
 				found = true;
 				break;
-				
+
 			case REDIS_REPLY_ARRAY:
 				freeReplyObject(festate->reply);
 				redisFree(festate->context);
 				ereport(ERROR, (errcode(ERRCODE_FDW_UNABLE_TO_CREATE_REPLY),
-								errmsg("not expecting an array for a singleton scalar table")
-							));
+				errmsg("not expecting an array for a singleton scalar table")
+								));
 				break;
 		}
 	}
 	else if (festate->table_type == PG_REDIS_HASH_TABLE && festate->qual_value)
 	{
-		festate->row = -1; /* just one row for qual'd search in a hash */
+		festate->row = -1;		/* just one row for qual'd search in a hash */
 		key = festate->qual_value;
 		switch (festate->reply->type)
 		{
 			case REDIS_REPLY_INTEGER:
-			    data = (char *) palloc(sizeof(char) * 64);
+				data = (char *) palloc(sizeof(char) * 64);
 				snprintf(data, 64, "%lld", festate->reply->integer);
 				found = true;
 				break;
-				
+
 			case REDIS_REPLY_STRING:
 				data = festate->reply->str;
 				found = true;
 				break;
-				
+
 			case REDIS_REPLY_ARRAY:
 				freeReplyObject(festate->reply);
 				redisFree(festate->context);
 				ereport(ERROR, (errcode(ERRCODE_FDW_UNABLE_TO_CREATE_REPLY),
 								errmsg("not expecting an array for a single hash property: %s", festate->qual_value)
-							));
+								));
 				break;
 		}
 	}
@@ -1407,11 +1411,11 @@ redisIterateForeignScanSingleton(ForeignScanState *node)
 		found = true;
 		key = festate->reply->element[festate->row]->str;
 		festate->row++;
-		if (festate->table_type == PG_REDIS_HASH_TABLE || 
+		if (festate->table_type == PG_REDIS_HASH_TABLE ||
 			festate->table_type == PG_REDIS_ZSET_TABLE)
 		{
 			redisReply *dreply = festate->reply->element[festate->row];
-			
+
 			switch (dreply->type)
 			{
 				case REDIS_REPLY_INTEGER:
@@ -1428,7 +1432,7 @@ redisIterateForeignScanSingleton(ForeignScanState *node)
 					redisFree(festate->context);
 					ereport(ERROR, (errcode(ERRCODE_FDW_UNABLE_TO_CREATE_REPLY),
 									errmsg("not expecting array for a hash value or zset score")
-								));
+									));
 					break;
 			}
 			festate->row++;
@@ -1545,58 +1549,60 @@ redisGetQual(Node *node, TupleDesc tupdesc, char **key, char **value, bool *push
 
 
 static char *
-process_redis_array(redisReply *reply,	redis_table_type type) 
+process_redis_array(redisReply *reply, redis_table_type type)
 {
-    StringInfo res = makeStringInfo();
-    int i;
-    bool need_sep = false;
+	StringInfo	res = makeStringInfo();
+	int			i;
+	bool		need_sep = false;
 
-    appendStringInfoChar(res,'{');
-    for (i = 0; i < reply->elements; i++)
-    {
-        redisReply *ir = reply->element[i];
-        if (need_sep)
-            appendStringInfoChar(res,',');
-        need_sep = true;
-        if (ir->type == REDIS_REPLY_ARRAY)
-            ereport(ERROR,
-                    (errcode(ERRCODE_INVALID_PARAMETER_VALUE), /* ??? */
-                     errmsg("nested array returns not yet supported")));
-        switch (ir->type)
-        {
-            case REDIS_REPLY_STATUS:
-            case REDIS_REPLY_STRING:
-			{
-				char *buff;
-				char *crs;
-				int i;
-                pg_verifymbstr(ir->str, ir->len, false);
-				buff = palloc(ir->len * 2 + 3);
-				crs = buff;
-				*crs++ = '"';
-				for (i = 0; i < ir->len; i++)
+	appendStringInfoChar(res, '{');
+	for (i = 0; i < reply->elements; i++)
+	{
+		redisReply *ir = reply->element[i];
+
+		if (need_sep)
+			appendStringInfoChar(res, ',');
+		need_sep = true;
+		if (ir->type == REDIS_REPLY_ARRAY)
+			ereport(ERROR,
+					(errcode(ERRCODE_INVALID_PARAMETER_VALUE),	/* ??? */
+					 errmsg("nested array returns not yet supported")));
+		switch (ir->type)
+		{
+			case REDIS_REPLY_STATUS:
+			case REDIS_REPLY_STRING:
 				{
-					if (ir->str[i] == '"' || ir->str[i] == '\\')
-						*crs++ = '\\';
-					*crs++ = ir->str[i];
+					char	   *buff;
+					char	   *crs;
+					int			i;
+
+					pg_verifymbstr(ir->str, ir->len, false);
+					buff = palloc(ir->len * 2 + 3);
+					crs = buff;
+					*crs++ = '"';
+					for (i = 0; i < ir->len; i++)
+					{
+						if (ir->str[i] == '"' || ir->str[i] == '\\')
+							*crs++ = '\\';
+						*crs++ = ir->str[i];
+					}
+					*crs++ = '"';
+					*crs = '\0';
+					appendStringInfoString(res, buff);
+					pfree(buff);
 				}
-				*crs++ = '"';
-				*crs = '\0';
-                appendStringInfoString(res,buff);
-				pfree(buff);
-			}
-                break;
-            case REDIS_REPLY_INTEGER:
-                appendStringInfo(res,"%lld",ir->integer);
-                break;
-            case REDIS_REPLY_NIL:
-                appendStringInfoString(res,"NULL");
-                break;
-            default:
-                break;
-        }
-    }
-    appendStringInfoChar(res,'}');
-    
-    return res->data;
+				break;
+			case REDIS_REPLY_INTEGER:
+				appendStringInfo(res, "%lld", ir->integer);
+				break;
+			case REDIS_REPLY_NIL:
+				appendStringInfoString(res, "NULL");
+				break;
+			default:
+				break;
+		}
+	}
+	appendStringInfoChar(res, '}');
+
+	return res->data;
 }

@@ -109,7 +109,7 @@ typedef struct redisTableOptions
 	char *keyset;
 	char *singleton_key;
 	redis_table_type table_type;
-} redisTableOptions, *RedisTableOptions;
+} redisTableOptions;
 
 
 	
@@ -185,7 +185,7 @@ static void redisEndForeignScan(ForeignScanState *node);
  * Helper functions
  */
 static bool redisIsValidOption(const char *option, Oid context);
-static void redisGetOptions(Oid foreigntableid, RedisTableOptions options); 
+static void redisGetOptions(Oid foreigntableid, redisTableOptions *options);
 static void redisGetQual(Node *node, TupleDesc tupdesc, char **key, char **value, bool *pushdown);
 static char *process_redis_array(redisReply *reply,	redis_table_type type);
 /*
@@ -442,7 +442,7 @@ redisIsValidOption(const char *option, Oid context)
  * Fetch the options for a redis_fdw foreign table.
  */
 static void
-redisGetOptions(Oid foreigntableid,RedisTableOptions table_options) 
+redisGetOptions(Oid foreigntableid, redisTableOptions *table_options)
 {
 	ForeignTable *table;
 	ForeignServer *server;
@@ -467,8 +467,6 @@ redisGetOptions(Oid foreigntableid,RedisTableOptions table_options)
 	options = list_concat(options, table->options);
 	options = list_concat(options, server->options);
 	options = list_concat(options, mapping->options);
-
-//	table_options->table_type = PG_REDIS_SCALAR_TABLE;
 
 	/* Loop through the options, and get the server/port */
 	foreach(lc, options)

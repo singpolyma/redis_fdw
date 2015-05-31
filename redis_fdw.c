@@ -754,8 +754,7 @@ redisExplainForeignScan(ForeignScanState *node, ExplainState *es)
 {
 	redisReply *reply;
 
-	RedisFdwExecutionState *festate = 
-		(RedisFdwExecutionState *) node->fdw_state;
+	RedisFdwExecutionState *festate = (RedisFdwExecutionState *) node->fdw_state;
 
 #ifdef DEBUG
 	elog(NOTICE, "redisExplainForeignScan");

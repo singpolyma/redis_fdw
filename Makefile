@@ -30,7 +30,9 @@ EXTRA_CLEAN = sql/redis_fdw.sql expected/redis_fdw.out
 
 SHLIB_LINK += -lhiredis
 
-ifdef USE_PGXS
+USE_PGXS = 1
+
+ifeq ($(USE_PGXS),1)
 PG_CONFIG = pg_config
 PGXS := $(shell $(PG_CONFIG) --pgxs)
 include $(PGXS)

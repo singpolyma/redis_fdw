@@ -407,19 +407,19 @@ select * from db15_w_scalar order by key;
 
 delete from db15_w_scalar where key = 'a_ws';
 
-select * from db15_w_scalar;
+select * from db15_w_scalar order by key;
 
 update db15_w_scalar set key = 'x_ws', val='y' where key = 'e_ws';
 
-select * from db15_w_scalar;
+select * from db15_w_scalar order by key;
 
 update db15_w_scalar set key = 'z_ws' where key = 'c_ws';
 
-select * from db15_w_scalar;
+select * from db15_w_scalar order by key;
 
 update db15_w_scalar set val = 'z' where key = 'z_ws';
 
-select * from db15_w_scalar;
+select * from db15_w_scalar order by key;
 
 /*
 -- don't delete the whole namespace
@@ -442,30 +442,30 @@ insert into db15_w_scalar_pfx values ('x','y'); -- prefix error
 
 insert into db15_w_scalar_pfx values ('w_scalar_a','x'); -- dup error
 
-select * from db15_w_scalar_pfx;
+select * from db15_w_scalar_pfx order by key;
 
 delete from db15_w_scalar_pfx where key = 'w_scalar_a';
 
-select * from db15_w_scalar_pfx;
+select * from db15_w_scalar_pfx order by key;
 
 update db15_w_scalar_pfx set key = 'x', val = 'y' where key = 'w_scalar_c'; -- prefix err
 update db15_w_scalar_pfx set key = 'x'  where key = 'w_scalar_c'; -- prefix err
 
 update db15_w_scalar_pfx set key = 'w_scalar_x', val = 'y' where key = 'w_scalar_c';
 
-select * from db15_w_scalar_pfx;
+select * from db15_w_scalar_pfx order by key;
 
 update db15_w_scalar_pfx set key = 'w_scalar_z' where key = 'w_scalar_x';
 
-select * from db15_w_scalar_pfx;
+select * from db15_w_scalar_pfx order by key;
 
 update db15_w_scalar_pfx set val = 'w' where key = 'w_scalar_e';
 
-select * from db15_w_scalar_pfx;
+select * from db15_w_scalar_pfx order by key;
 
 delete from db15_w_scalar_pfx;
 
-select * from db15_w_scalar_pfx;
+select * from db15_w_scalar_pfx order by key;
 
 -- non-singleton scalar table keyset
 
@@ -473,33 +473,33 @@ create foreign table db15_w_scalar_kset(key text, val text)
        server localredis
        options (database '15', tablekeyset 'w_scalar_kset');
 
-select * from db15_w_scalar_kset;
+select * from db15_w_scalar_kset order by key;
 
 insert into db15_w_scalar_kset values ('a_wsks','b'), ('c_wsks','d'),('e_wsks','f');
 
 insert into db15_w_scalar_kset values ('a_wsks','x'); -- dup error
 
-select * from db15_w_scalar_kset;
+select * from db15_w_scalar_kset order by key;
 
 delete from db15_w_scalar_kset where key = 'a_wsks';
 
-select * from db15_w_scalar_kset;
+select * from db15_w_scalar_kset order by key;
 
 update db15_w_scalar_kset set key = 'x_wsks', val = 'y' where key = 'c_wsks';
 
-select * from db15_w_scalar_kset;
+select * from db15_w_scalar_kset order by key;
 
 update db15_w_scalar_kset set key = 'z_wsks' where key = 'x_wsks';
 
-select * from db15_w_scalar_kset;
+select * from db15_w_scalar_kset order by key;
 
 update db15_w_scalar_kset set val = 'w' where key = 'e_wsks';
 
-select * from db15_w_scalar_kset;
+select * from db15_w_scalar_kset order by key;
 
 delete from db15_w_scalar_kset;
 
-select * from db15_w_scalar_kset;
+select * from db15_w_scalar_kset order by key;
 
 
 -- non-singleton set table no prefix no keyset

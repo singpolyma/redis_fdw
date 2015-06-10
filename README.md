@@ -4,7 +4,7 @@ Redis FDW for PostgreSQL 9.1+
 This PostgreSQL extension implements a Foreign Data Wrapper (FDW) for
 the Redis key/value database: http://redis.io/
 
-This code was originally experimental, and largely intended as a pet project 
+This code was originally experimental, and largely intended as a pet project
 for Dave to experiment with and learn about FDWs in PostgreSQL. It has now been
 extended for production use by Andrew.
 
@@ -14,9 +14,9 @@ warned!
 Building
 --------
 
-To build the code, you need the hiredis C interface to Redis installed 
+To build the code, you need the hiredis C interface to Redis installed
 on your system. You can checkout the hiredis from
-[https://github.com/redis/hiredis](Github), 
+[https://github.com/redis/hiredis](Github),
 or it might be available for your OS as it is for Fedora, for example.
 
 Once that's done, the extension can be built with:
@@ -29,7 +29,7 @@ Once that's done, the extension can be built with:
 Make necessary changes for 9.2 and later.
 
 You will need to have the right branch checked out to match the PostgreSQL
-release you are buiding against, as the FDW API has changed from release 
+release you are building against, as the FDW API has changed from release
 to release.
 
 Dave has tested the original on Mac OS X 10.6 only, and Andrew on Fedora and
@@ -44,7 +44,7 @@ Limitations
   and then fetch each value. So, we get a list of keys to begin with,
   and then fetch whatever records still exist as we build the tuples.
 
-- We can only push down a single qual to Redis, which must use the 
+- We can only push down a single qual to Redis, which must use the
   TEXTEQ operator, and must be on the 'key' column.
 
 - There is no support for non-scalar datatypes in Redis
@@ -93,19 +93,32 @@ columns and an optional numeric score column for zsets.
 The following parameter can be set on a user mapping for a Redis
 foreign server:
 
-password:	The password to authenticate to the Redis server with. 
+password:	The password to authenticate to the Redis server with.
      Default: <none>
+
+Insert, Update and Delete
+-------------------------
+
+PostgreSQL acquired support for modifying foreign tables in release 9.3, and
+now the Redis Foreign Data Wrapper supports these too, for 9.3 and later
+PostgreSQL releases. There are a few restriction on this:
+
+- only INSERT works for singleton key list tables, due to limitations
+  in the Redis API for lists.
+- INSERT and UPDATE only work for singleton key ZSET tables if they have the
+  priority column
+- non-singleton non-scalar tables must have an array type for the second column
 
 Example
 -------
 
 	CREATE EXTENSION redis_fdw;
 
-	CREATE SERVER redis_server 
-		FOREIGN DATA WRAPPER redis_fdw 
+	CREATE SERVER redis_server
+		FOREIGN DATA WRAPPER redis_fdw
 		OPTIONS (address '127.0.0.1', port '6379');
 
-	CREATE FOREIGN TABLE redis_db0 (key text, value text) 
+	CREATE FOREIGN TABLE redis_db0 (key text, val text)
 		SERVER redis_server
 		OPTIONS (database '0');
 
@@ -113,10 +126,34 @@ Example
 		SERVER redis_server
 		OPTIONS (password 'secret');
 
-	CREATE FOREIGN TABLE myredishash (key text, value text[])
+	CREATE FOREIGN TABLE myredishash (key text, val text[])
 		SERVER redis_server
 		OPTIONS (database '0', tabletype 'hash', tablekeyprefix 'mytable:');
-	 
+
+    INSERT INTO myredishash (key, val)
+       VALUES ('mytable:r1,'{prop1,val1,prop2,val2}');
+
+    UPDATE myredishash
+        SET val = '{prop3,val3,prop4,val4}'
+        WHERE key = 'mytable:r1';
+
+    DELETE from myredishash
+        WHERE key = 'mytable:r1';
+
+	CREATE FOREIGN TABLE myredis_s_hash (key text, val text)
+		SERVER redis_server
+		OPTIONS (database '0', tabletype 'hash',  singleton_key 'mytable');
+
+    INSERT INTO myredis_s_hash (key, val)
+       VALUES ('prop1','val1'),('prop2','val2');
+
+    UPDATE myredis_s_hash
+        SET val = 'val23'
+        WHERE key = 'prop1';
+
+    DELETE from myredis_s_hash
+        WHERE key = 'prop2';
+
 Testing
 -------
 
@@ -128,7 +165,7 @@ populate it, and it cleans up afterwards.
 
 
 Authors
-------- 
+-------
 
 Dave Page
 dpage@pgadmin.org

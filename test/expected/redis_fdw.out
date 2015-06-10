@@ -655,15 +655,15 @@ select * from db15_w_scalar order by key;
 (3 rows)
 
 delete from db15_w_scalar where key = 'a_ws';
-select * from db15_w_scalar;
+select * from db15_w_scalar order by key;
  key  | val 
 ------+-----
- e_ws | f
  c_ws | d
+ e_ws | f
 (2 rows)
 
 update db15_w_scalar set key = 'x_ws', val='y' where key = 'e_ws';
-select * from db15_w_scalar;
+select * from db15_w_scalar order by key;
  key  | val 
 ------+-----
  c_ws | d
@@ -671,19 +671,19 @@ select * from db15_w_scalar;
 (2 rows)
 
 update db15_w_scalar set key = 'z_ws' where key = 'c_ws';
-select * from db15_w_scalar;
+select * from db15_w_scalar order by key;
  key  | val 
 ------+-----
- z_ws | d
  x_ws | y
+ z_ws | d
 (2 rows)
 
 update db15_w_scalar set val = 'z' where key = 'z_ws';
-select * from db15_w_scalar;
+select * from db15_w_scalar order by key;
  key  | val 
 ------+-----
- z_ws | z
  x_ws | y
+ z_ws | z
 (2 rows)
 
 /*
@@ -706,20 +706,20 @@ insert into db15_w_scalar_pfx values ('x','y'); -- prefix error
 ERROR:  key 'x' does not match table key prefix 'w_scalar_'
 insert into db15_w_scalar_pfx values ('w_scalar_a','x'); -- dup error
 ERROR:  key already exists: w_scalar_a
-select * from db15_w_scalar_pfx;
+select * from db15_w_scalar_pfx order by key;
     key     | val 
 ------------+-----
- w_scalar_e | f
- w_scalar_c | d
  w_scalar_a | b
+ w_scalar_c | d
+ w_scalar_e | f
 (3 rows)
 
 delete from db15_w_scalar_pfx where key = 'w_scalar_a';
-select * from db15_w_scalar_pfx;
+select * from db15_w_scalar_pfx order by key;
     key     | val 
 ------------+-----
- w_scalar_e | f
  w_scalar_c | d
+ w_scalar_e | f
 (2 rows)
 
 update db15_w_scalar_pfx set key = 'x', val = 'y' where key = 'w_scalar_c'; -- prefix err
@@ -727,7 +727,7 @@ ERROR:  key prefix condition violation: x
 update db15_w_scalar_pfx set key = 'x'  where key = 'w_scalar_c'; -- prefix err
 ERROR:  key prefix condition violation: x
 update db15_w_scalar_pfx set key = 'w_scalar_x', val = 'y' where key = 'w_scalar_c';
-select * from db15_w_scalar_pfx;
+select * from db15_w_scalar_pfx order by key;
     key     | val 
 ------------+-----
  w_scalar_e | f
@@ -735,7 +735,7 @@ select * from db15_w_scalar_pfx;
 (2 rows)
 
 update db15_w_scalar_pfx set key = 'w_scalar_z' where key = 'w_scalar_x';
-select * from db15_w_scalar_pfx;
+select * from db15_w_scalar_pfx order by key;
     key     | val 
 ------------+-----
  w_scalar_e | f
@@ -743,7 +743,7 @@ select * from db15_w_scalar_pfx;
 (2 rows)
 
 update db15_w_scalar_pfx set val = 'w' where key = 'w_scalar_e';
-select * from db15_w_scalar_pfx;
+select * from db15_w_scalar_pfx order by key;
     key     | val 
 ------------+-----
  w_scalar_e | w
@@ -751,7 +751,7 @@ select * from db15_w_scalar_pfx;
 (2 rows)
 
 delete from db15_w_scalar_pfx;
-select * from db15_w_scalar_pfx;
+select * from db15_w_scalar_pfx order by key;
  key | val 
 -----+-----
 (0 rows)
@@ -760,7 +760,7 @@ select * from db15_w_scalar_pfx;
 create foreign table db15_w_scalar_kset(key text, val text)
        server localredis
        options (database '15', tablekeyset 'w_scalar_kset');
-select * from db15_w_scalar_kset;
+select * from db15_w_scalar_kset order by key;
  key | val 
 -----+-----
 (0 rows)
@@ -768,24 +768,24 @@ select * from db15_w_scalar_kset;
 insert into db15_w_scalar_kset values ('a_wsks','b'), ('c_wsks','d'),('e_wsks','f');
 insert into db15_w_scalar_kset values ('a_wsks','x'); -- dup error
 ERROR:  key already exists: a_wsks
-select * from db15_w_scalar_kset;
+select * from db15_w_scalar_kset order by key;
   key   | val 
 --------+-----
- e_wsks | f
- c_wsks | d
  a_wsks | b
+ c_wsks | d
+ e_wsks | f
 (3 rows)
 
 delete from db15_w_scalar_kset where key = 'a_wsks';
-select * from db15_w_scalar_kset;
+select * from db15_w_scalar_kset order by key;
   key   | val 
 --------+-----
- e_wsks | f
  c_wsks | d
+ e_wsks | f
 (2 rows)
 
 update db15_w_scalar_kset set key = 'x_wsks', val = 'y' where key = 'c_wsks';
-select * from db15_w_scalar_kset;
+select * from db15_w_scalar_kset order by key;
   key   | val 
 --------+-----
  e_wsks | f
@@ -793,23 +793,23 @@ select * from db15_w_scalar_kset;
 (2 rows)
 
 update db15_w_scalar_kset set key = 'z_wsks' where key = 'x_wsks';
-select * from db15_w_scalar_kset;
+select * from db15_w_scalar_kset order by key;
   key   | val 
 --------+-----
- z_wsks | y
  e_wsks | f
+ z_wsks | y
 (2 rows)
 
 update db15_w_scalar_kset set val = 'w' where key = 'e_wsks';
-select * from db15_w_scalar_kset;
+select * from db15_w_scalar_kset order by key;
   key   | val 
 --------+-----
- z_wsks | y
  e_wsks | w
+ z_wsks | y
 (2 rows)
 
 delete from db15_w_scalar_kset;
-select * from db15_w_scalar_kset;
+select * from db15_w_scalar_kset order by key;
  key | val 
 -----+-----
 (0 rows)

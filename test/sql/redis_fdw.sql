@@ -839,6 +839,56 @@ delete from db15_w_hash_kset;
 
 select * from db15_w_hash_kset;
 
+-- now clean up for the cursor tests
+
+\! redis-cli < test/sql/redis_clean
+
+-- cursor tests
+
+create foreign table db15bigprefixscalar (
+       key text not null,
+       val text
+)
+server localredis
+options (database '15', tablekeyprefix 'w_scalar_');
+
+create foreign table db15bigkeysetscalar (
+       key text not null,
+       val text
+)
+server localredis
+options (database '15', tablekeyset 'w_kset');
+
+insert into db15
+select 'junk' || x, 'junk'
+from generate_series(1,10000) as x;
+
+insert into db15bigprefixscalar
+select 'w_scalar_' || x::text, 'val ' || x::text
+from generate_series (1,10000) as x;
+
+insert into db15bigkeysetscalar
+select 'key_' || x::text, 'val ' || x::text
+from generate_series (1,10000) as x;
+
+insert into db15
+select 'junk' || x, 'junk'
+from generate_series(10001, 20000) as x;
+
+insert into db15bigprefixscalar
+select 'w_scalar_' || x::text, 'val ' || x::text
+from generate_series (10001, 20000) as x;
+
+insert into db15bigkeysetscalar
+select 'key_' || x::text, 'val ' || x::text
+from generate_series (10001, 20000) as x;
+
+select count(*) from   db15;
+
+select count(*) from db15bigprefixscalar;
+
+select count(*) from db15bigkeysetscalar;
+
 -- all done, so now blow everything in the db away again
 
 \! redis-cli < test/sql/redis_clean

@@ -1341,6 +1341,59 @@ select * from db15_w_hash_kset;
 -----+-----
 (0 rows)
 
+-- now clean up for the cursor tests
+\! redis-cli < test/sql/redis_clean
+OK
+OK
+-- cursor tests
+create foreign table db15bigprefixscalar (
+       key text not null,
+       val text
+)
+server localredis
+options (database '15', tablekeyprefix 'w_scalar_');
+create foreign table db15bigkeysetscalar (
+       key text not null,
+       val text
+)
+server localredis
+options (database '15', tablekeyset 'w_kset');
+insert into db15
+select 'junk' || x, 'junk'
+from generate_series(1,10000) as x;
+insert into db15bigprefixscalar
+select 'w_scalar_' || x::text, 'val ' || x::text
+from generate_series (1,10000) as x;
+insert into db15bigkeysetscalar
+select 'key_' || x::text, 'val ' || x::text
+from generate_series (1,10000) as x;
+insert into db15
+select 'junk' || x, 'junk'
+from generate_series(10001, 20000) as x;
+insert into db15bigprefixscalar
+select 'w_scalar_' || x::text, 'val ' || x::text
+from generate_series (10001, 20000) as x;
+insert into db15bigkeysetscalar
+select 'key_' || x::text, 'val ' || x::text
+from generate_series (10001, 20000) as x;
+select count(*) from   db15;
+ count 
+-------
+ 60000
+(1 row)
+
+select count(*) from db15bigprefixscalar;
+ count 
+-------
+ 20000
+(1 row)
+
+select count(*) from db15bigkeysetscalar;
+ count 
+-------
+ 20000
+(1 row)
+
 -- all done, so now blow everything in the db away again
 \! redis-cli < test/sql/redis_clean
 OK

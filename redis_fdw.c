@@ -823,7 +823,8 @@ redisGetForeignPlan(PlannerInfo *root,
 							scan_clauses,
 							scan_relid,
 							NIL,	/* no expressions to evaluate */
-							NIL);		/* no private state either */
+							NIL,	/* no private state either */
+							NIL);   /* no custom tlist */
 }
 
 /*
@@ -1798,7 +1799,8 @@ redisPlanForeignModify(PlannerInfo *root,
 
 		/* code borrowed from mysql fdw */
 
-		Bitmapset  *tmpset = bms_copy(rte->modifiedCols);
+		/* modifiedCols in pg < 9.5 */
+		Bitmapset  *tmpset = bms_copy(rte->updatedCols);
 		AttrNumber	col;
 
 		while ((col = bms_first_member(tmpset)) >= 0)

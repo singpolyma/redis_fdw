@@ -142,6 +142,7 @@ typedef struct RedisFdwExecutionState
 	redis_table_type table_type;
 	char	   *cursor_search_string;
 	char	   *cursor_id;
+	MemoryContext mctxt;
 } RedisFdwExecutionState;
 
 /* initial cursor */
@@ -939,6 +940,12 @@ redisBeginForeignScan(ForeignScanState *node, int eflags)
 	if (eflags & EXEC_FLAG_EXPLAIN_ONLY)
 		return;
 
+	/*
+	 * We're going to use the current scan-lived context to
+	 * store the pstrduped cusrsor id.
+	 */
+	festate->mctxt = CurrentMemoryContext;
+
 	/* Execute the query */
 	if (festate->singleton_key)
 	{
@@ -1202,10 +1209,15 @@ redisIterateForeignScanMulti(ForeignScanState *node)
 
 		if (cursor->type == REDIS_REPLY_STRING)
 		{
+
+			MemoryContext oldcontext;
+			oldcontext = MemoryContextSwitchTo(festate->mctxt);
+			pfree(festate->cursor_id);
 			if (cursor->len == 1 && cursor->str[0] == '0')
 				festate->cursor_id = NULL;
 			else
 				festate->cursor_id = pstrdup(cursor->str);
+			MemoryContextSwitchTo(oldcontext);
 		}
 		else
 		{

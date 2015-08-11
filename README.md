@@ -16,7 +16,7 @@ Building
 
 To build the code, you need the hiredis C interface to Redis installed
 on your system. You can checkout the hiredis from
-[https://github.com/redis/hiredis](Github),
+[Github](https://github.com/redis/hiredis),
 or it might be available for your OS as it is for Fedora, for example.
 
 Once that's done, the extension can be built with:

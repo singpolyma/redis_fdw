@@ -200,7 +200,9 @@ static ForeignScan *redisGetForeignPlan(PlannerInfo *root,
 					Oid foreigntableid,
 					ForeignPath *best_path,
 					List *tlist,
-					List *scan_clauses);
+					List *scan_clauses,
+					Plan *outer_plan);
+
 static void redisExplainForeignScan(ForeignScanState *node, ExplainState *es);
 static void redisBeginForeignScan(ForeignScanState *node, int eflags);
 static TupleTableSlot *redisIterateForeignScan(ForeignScanState *node);
@@ -791,6 +793,7 @@ redisGetForeignPaths(PlannerInfo *root,
 									 total_cost,
 									 NIL,		/* no pathkeys */
 									 NULL,		/* no outer rel either */
+									 NULL,        /* no extra plan */
 									 NIL));		/* no fdw_private data */
 
 }
@@ -801,7 +804,8 @@ redisGetForeignPlan(PlannerInfo *root,
 					Oid foreigntableid,
 					ForeignPath *best_path,
 					List *tlist,
-					List *scan_clauses)
+					List *scan_clauses,
+					Plan *outer_plan)
 {
 	Index		scan_relid = baserel->relid;
 
@@ -825,7 +829,8 @@ redisGetForeignPlan(PlannerInfo *root,
 							NIL,	/* no expressions to evaluate */
 							NIL,	/* no private state either */
 							NIL,    /* no custom tlist */
-							NIL     /* no remote quals */ );
+							NIL,    /* no remote quals */
+							outer_plan);
 }
 
 /*

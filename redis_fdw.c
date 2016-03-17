@@ -788,6 +788,7 @@ redisGetForeignPaths(PlannerInfo *root,
 	/* Create a ForeignPath node and add it as only possible path */
 	add_path(baserel, (Path *)
 			 create_foreignscan_path(root, baserel,
+									 NULL,      /* default pathtarget */
 									 baserel->rows,
 									 startup_cost,
 									 total_cost,

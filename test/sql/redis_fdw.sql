@@ -39,7 +39,7 @@ create foreign table db15_zset(key text, value text)
 
 -- make sure they are all empty - if any are not stop the script right now
 
-\set ON_ERROR_STOP
+\set ON_ERROR_STOP on
 do $$
   declare
     rows bigint;

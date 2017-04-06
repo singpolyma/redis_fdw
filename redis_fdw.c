@@ -989,12 +989,12 @@ redisBeginForeignScan(ForeignScanState *node, int eflags)
 	{
 		ListCell   *lc;
 
-		foreach(lc, node->ss.ps.qual)
+		foreach(lc, node->ss.ps.plan->qual)
 		{
 			/* Only the first qual can be pushed down to Redis */
-			ExprState  *state = lfirst(lc);
+			Expr  *state = lfirst(lc);
 
-			redisGetQual((Node *) state->expr,
+			redisGetQual((Node *) state,
 						 node->ss.ss_currentRelation->rd_att,
 						 &qual_key, &qual_value, &pushdown);
 			if (pushdown)

@@ -1625,7 +1625,7 @@ redisGetQual(Node *node, TupleDesc tupdesc, char **key, char **value, bool *push
 			initStringInfo(&buf);
 
 			/* And get the column and value... */
-			*key = NameStr(tupdesc->attrs[varattno - 1]->attname);
+			*key = NameStr(TupleDescAttr(tupdesc, varattno - 1)->attname);
 			*value = TextDatumGetCString(((Const *) right)->constvalue);
 
 			/*
@@ -1715,7 +1715,7 @@ redisAddForeignUpdateTargets(Query *parsetree,
 
 	/* assumes that this isn't attisdropped */
 	Form_pg_attribute attr =
-	RelationGetDescr(target_relation)->attrs[0];
+		TupleDescAttr(RelationGetDescr(target_relation), 0);
 
 #ifdef DEBUG
 	elog(NOTICE, "redisAddForeignUpdateTargets");
@@ -1780,7 +1780,7 @@ redisPlanForeignModify(PlannerInfo *root,
 	/* if the second attribute exists and it's an array, get the element type */
 	if (tupdesc->natts > 1)
 	{
-		Form_pg_attribute attr = tupdesc->attrs[1];
+		Form_pg_attribute attr = TupleDescAttr(tupdesc, 1);
 
 		array_element_type = get_element_type(attr->atttypid);
 	}
@@ -1794,7 +1794,7 @@ redisPlanForeignModify(PlannerInfo *root,
 
 		for (attnum = 1; attnum <= tupdesc->natts; attnum++)
 		{
-			Form_pg_attribute attr = tupdesc->attrs[attnum - 1];
+			Form_pg_attribute attr = TupleDescAttr(tupdesc, attnum - 1);
 
 			if (!attr->attisdropped)
 				targetAttrs = lappend_int(targetAttrs, attnum);
@@ -1890,7 +1890,7 @@ redisBeginForeignModify(ModifyTableState *mtstate,
 	if (op == CMD_UPDATE || op == CMD_DELETE)
 	{
 		Plan	   *subplan = mtstate->mt_plans[subplan_index]->plan;
-		Form_pg_attribute attr = RelationGetDescr(rel)->attrs[0];		/* key is first */
+		Form_pg_attribute attr = TupleDescAttr(RelationGetDescr(rel), 0);		/* key is first */
 
 		fmstate->keyAttno = ExecFindJunkAttributeInTlist(subplan->targetlist,
 														 REDISMODKEYNAME);
@@ -1909,7 +1909,7 @@ redisBeginForeignModify(ModifyTableState *mtstate,
 		foreach(lc, fmstate->target_attrs)
 		{
 			int			attnum = lfirst_int(lc);
-			Form_pg_attribute attr = RelationGetDescr(rel)->attrs[attnum - 1];
+			Form_pg_attribute attr = TupleDescAttr(RelationGetDescr(rel), attnum - 1);
 			Oid			elem = attr->attndims ?
 			get_element_type(attr->atttypid) :
 			attr->atttypid;

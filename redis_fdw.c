@@ -886,7 +886,7 @@ redisExplainForeignScan(ForeignScanState *node, ExplainState *es)
 				 ));
 	}
 
-	ExplainPropertyLong("Foreign Redis Table Size",
+	ExplainPropertyInteger("Foreign Redis Table Size",
 						festate->keyprefix ? reply->integer / 20 :
 						reply->integer,
 						es);

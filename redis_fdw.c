@@ -1414,7 +1414,7 @@ redisIterateForeignScanMulti(ForeignScanState *node)
 		values[0] = key;
 		values[1] = data;
 		tuple = BuildTupleFromCStrings(festate->attinmeta, values);
-		ExecStoreTuple(tuple, slot, InvalidBuffer, false);
+		ExecStoreHeapTuple(tuple, slot, false);
 	}
 
 	/* Cleanup */
@@ -1542,7 +1542,7 @@ redisIterateForeignScanSingleton(ForeignScanState *node)
 		values[0] = key;
 		values[1] = data;
 		tuple = BuildTupleFromCStrings(festate->attinmeta, values);
-		ExecStoreTuple(tuple, slot, InvalidBuffer, false);
+		ExecStoreHeapTuple(tuple, slot, false);
 	}
 
 	return slot;

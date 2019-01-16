@@ -2044,6 +2044,7 @@ check_reply(redisReply *reply, redisContext *context, int error_code, char *mess
 {
 	char	   *err;
 	char	   *xmessage;
+	int         msglen;
 
 	if (!reply)
 	{
@@ -2058,8 +2059,9 @@ check_reply(redisReply *reply, redisContext *context, int error_code, char *mess
 	else
 		return;
 
-	xmessage = palloc(strlen(message) + 6);
-	strncpy(xmessage, message, strlen(message) + 1);
+	msglen = strlen(message);
+	xmessage = palloc(msglen + 6);
+	strncpy(xmessage, message, msglen + 1);
 	strcat(xmessage, ": %s");
 
 	if (arg != NULL)

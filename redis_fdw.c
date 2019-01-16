@@ -34,6 +34,7 @@
 #include <hiredis/hiredis.h>
 
 #include "funcapi.h"
+#include "access/heapam.h"
 #include "access/reloptions.h"
 #include "access/sysattr.h"
 #include "catalog/pg_foreign_server.h"

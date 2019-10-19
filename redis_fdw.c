@@ -34,9 +34,9 @@
 #include <hiredis/hiredis.h>
 
 #include "funcapi.h"
-#include "access/heapam.h"
 #include "access/reloptions.h"
 #include "access/sysattr.h"
+#include "access/table.h"
 #include "catalog/pg_foreign_server.h"
 #include "catalog/pg_foreign_table.h"
 #include "catalog/pg_user_mapping.h"
@@ -1775,7 +1775,7 @@ redisPlanForeignModify(PlannerInfo *root,
 	if (plan->returningLists)
 		elog(ERROR, "RETURNING is not supported by this FDW");
 
-	rel = heap_open(rte->relid, NoLock);
+	rel = table_open(rte->relid, NoLock);
 	tupdesc = RelationGetDescr(rel);
 
 	/* if the second attribute exists and it's an array, get the element type */
@@ -1824,7 +1824,7 @@ redisPlanForeignModify(PlannerInfo *root,
 
 	/* nothing extra needed for DELETE - all it needs is the resjunk column */
 
-	heap_close(rel, NoLock);
+	table_close(rel, NoLock);
 
 	return list_make2(targetAttrs, array_elem_list);
 }

@@ -22,7 +22,6 @@ DATA = redis_fdw--1.0.sql
 
 REGRESS = redis_fdw
 REGRESS_OPTS = --inputdir=test --outputdir=test \
-      --load-language=plpgsql \
       --load-extension=hstore \
 	  --load-extension=$(EXTENSION)
 

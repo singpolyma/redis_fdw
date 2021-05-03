@@ -149,7 +149,7 @@ Example
 		OPTIONS (database '0', tabletype 'hash', tablekeyprefix 'mytable:');
 
     INSERT INTO myredishash (key, val)
-       VALUES ('mytable:r1,'{prop1,val1,prop2,val2}');
+       VALUES ('mytable:r1','{prop1,val1,prop2,val2}');
 
     UPDATE myredishash
         SET val = '{prop3,val3,prop4,val4}'

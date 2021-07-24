@@ -1352,7 +1352,7 @@ redisIterateForeignScanMulti(ForeignScanState *node)
 					break;
 				case PG_REDIS_ZSET_TABLE:
 					reply = redisCommand(festate->context,
-										 "ZRANGE %s 0 -1", key);
+										 "ZRANGE %s 0 -1 WITHSCORES", key);
 					break;
 				case PG_REDIS_SCALAR_TABLE:
 				default:

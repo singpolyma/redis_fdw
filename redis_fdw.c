@@ -1418,6 +1418,8 @@ redisIterateForeignScanMulti(ForeignScanState *node)
 		values[1] = data;
 		tuple = BuildTupleFromCStrings(festate->attinmeta, values);
 		ExecStoreHeapTuple(tuple, slot, false);
+	} else if (festate->cursor_id != NULL) {
+		redisIterateForeignScanMulti(node);
 	}
 
 	/* Cleanup */
